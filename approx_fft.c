@@ -13,8 +13,6 @@
 #include "constants.h"
 #include <mpfr.h>
 
-#define FP_APPROX_FRACTION_BIT 8
-#define FP_FULL_FRACTION_BIT 53
 
 #define PI  3.1415926535897932
 

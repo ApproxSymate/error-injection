@@ -14,9 +14,6 @@
 #include "bitflip.h"
 #include <mpfr.h>
 
-#define FP_APPROX_FRACTION_BIT 7
-#define FP_FULL_FRACTION_BIT 53
-
     double SparseCompRow_num_flops(int N, int nz, int num_iterations)
     {
         /* Note that if nz does not divide N evenly, then the

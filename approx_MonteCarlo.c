@@ -14,9 +14,6 @@
 #include "bitflip.h"
 #include <mpfr.h>
 
-#define FP_APPROX_FRACTION_BIT 7
-#define FP_FULL_FRACTION_BIT 53
-
 static const int SEED = 113;
 
 

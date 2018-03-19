@@ -14,8 +14,7 @@
 #include "bitflip.h"
 #include <mpfr.h>
 
-#define FP_APPROX_FRACTION_BIT 7
-#define FP_FULL_FRACTION_BIT 53
+
 
 #define LEN 7 
  int config_vals[LEN];

@@ -1,6 +1,6 @@
 #include "bitflip.h"
 //#define TEST
-#define LIMIT 16
+
 
 int ipow(int base, int exp)
 {

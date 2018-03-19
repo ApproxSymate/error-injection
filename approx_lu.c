@@ -10,8 +10,6 @@
 #include <stdlib.h>
 #include "bitflip.h"
 
-#define FP_APPROX_FRACTION_BIT 8
-#define FP_FULL_FRACTION_BIT 53
 
 double LU_num_flops(int N)
 {
