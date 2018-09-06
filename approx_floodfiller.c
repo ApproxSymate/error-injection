@@ -20,7 +20,6 @@
 #define WIDTH 32
 #define HEIGHT 32
 #define MAX_STACK_SIZE 500
-
 int *xstack;
 int *ystack;
 int stackSize;
@@ -87,11 +86,11 @@ int main() {
 			//printf("%d, ",image[i][j] );
 			//printf("%d, ",image_bitflip[i][j] );
 			//printf("%d \n",image[i][j]-image_bitflip[i][j]);
-			diff_bitflip += image[i][j]-image_bitflip[i][j];
+			diff_bitflip += abs(image[i][j]-image_bitflip[i][j]);
     }
   }
-  printf("Err %lf \n", diff_bitflip/(WIDTH*HEIGHT));
-  
+  printf("%lf, ", diff_bitflip/(WIDTH*HEIGHT));
+
   //printf("done\n");
 }
 
@@ -116,6 +115,7 @@ int getPix_bitflip(int x, int y) {
   else
     return bitflip_int(image_bitflip[x][y]);
 }
+
 
 void setPix_bitflip(int x, int y, int c) {
   if (x < 0 || x >= WIDTH || y < 0 || y >= HEIGHT)
@@ -157,7 +157,11 @@ void fillLine_bitflip(int x1, int x2, int y) {
     x2 = t;
   }
   for (x = x1; x <= x2; x++)
+#ifdef AGGRESSIVE
     setPix_bitflip(x, bitflip_int(y), targetColor);
+#else
+    setPix_bitflip(x, (y), targetColor);
+#endif
 }
 
 
@@ -234,16 +238,25 @@ int fill(int x, int y) {
 int fill_bitflip(int x, int y) {
   int width = WIDTH;
   int height = HEIGHT;
+#ifdef AGGRESSIV
   int color = getPix_bitflip(x, y);
+#else
+  int color = bitflip_int(getPix_bitflip(x, y));
+#endif
   fillLine_bitflip(x, x, y);
-  int newColor = getPix_bitflip(x, y);
+#ifdef AGGRESSIVE
+  int newColor = (getPix_bitflip(x, y));
+#else
+  int newColor = bitflip_int(getPix_bitflip(x, y)); //negate bitflip effect
+#endif
+
   setPix_bitflip(x, y, color);
 
   if (color == newColor)
     return -1;
 
   stackSize = 0;
-  push(x, y);
+  push(bitflip_int(x), bitflip_int(y));
 
   while (1) {
     x = popx();
@@ -251,14 +264,14 @@ int fill_bitflip(int x, int y) {
       return 1;
     y = popy();
 
-    if (getPix_bitflip(x, y)!=color) continue;
+    if (getPix_bitflip(x, y)!=bitflip_int(color)) continue;
     int x1 = x;
     int x2 = x;
 
-    while (getPix_bitflip(x1, y)==color && x1>=0) x1--; // find start of scan-line
+    while (getPix_bitflip(x1, y)==bitflip_int(color) && x1>=0) x1--; // find start of scan-line
     x1++;
 
-    while (getPix_bitflip(x2, y)==color && x2<width) x2++;  // find end of scan-line
+    while (getPix_bitflip(x2, y)==bitflip_int(color) && x2<width) x2++;  // find end of scan-line
     x2--;
 
     fillLine_bitflip(x1,x2,y); // fill scan-line
@@ -266,23 +279,21 @@ int fill_bitflip(int x, int y) {
     int inScanLine = 0;
     int i;
     for (i = x1; i <= x2; i++) { // find scan-lines above this one
-      if (!inScanLine && y > 0 && getPix_bitflip(i, y - 1) == color) {
-	push(i, y - 1);
+      if (!inScanLine && y > 0 && getPix_bitflip(i, y - 1) == bitflip_int(color)) {
+	push(bitflip_int(i), bitflip_int(y - 1));
 	inScanLine = 1;
-      } else if (inScanLine && y > 0 && getPix_bitflip(i, y - 1) != color)
+} else if (inScanLine && y > 0 && getPix_bitflip(i, y - 1) != bitflip_int(color))
 	inScanLine = 0;
     }
 
     inScanLine = 0;
     for (i = x1; i <= x2; i++) { // find scan-lines below this one
-      if (!inScanLine && y < height - 1 && getPix_bitflip(i, y + 1) == color) {
-	push(i, y + 1);
+      if (!inScanLine && y < height - 1 && getPix_bitflip(i, y + 1) == bitflip_int(color)) {
+	push(bitflip_int(i), bitflip_int(y + 1));
 	inScanLine = 1;
       } else if (inScanLine && y < height - 1
-		 && getPix_bitflip(i, y + 1) != color)
+		 && getPix_bitflip(i, y + 1) != bitflip_int(color))
 	inScanLine = 0;
     }
   }
 }
-
-

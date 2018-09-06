@@ -12,7 +12,7 @@
 #include <mpfr.h>
 //#include <klee/klee.h>
 // mpfr stuff , dont touch
-#define LEN 24 
+#define LEN 24
  int config_vals[LEN];
   mpfr_t k_init_mpfr;
   mpfr_t lcoff_init_mpfr;
@@ -60,31 +60,39 @@
                 mpfr_t temp_var_21;
                 mpfr_t temp_var_22;
                 mpfr_t temp_var_23;
-int my_init_mpfr() { 
+int my_init_mpfr() {
   mpfr_init2(k_init_mpfr, config_vals[1]);
+  //approx
   mpfr_init2(lcoff_init_mpfr, config_vals[2]);
   mpfr_init2(sng_init_mpfr, config_vals[3]);
   mpfr_init2(xe_init_mpfr, config_vals[4]);
+  //approx
   mpfr_init2(ye_init_mpfr, config_vals[5]);
   mpfr_init2(ze_init_mpfr, config_vals[6]);
   mpfr_init2(xd_init_mpfr, config_vals[7]);
   mpfr_init2(yd_init_mpfr, config_vals[8]);
   mpfr_init2(zd_init_mpfr, config_vals[9]);
   mpfr_init2(ix_init_mpfr, config_vals[10]);
+  //approx
   mpfr_init2(iy_init_mpfr, config_vals[11]);
+  //approx
   mpfr_init2(iz_init_mpfr, config_vals[12]);
   mpfr_init2(nx_init_mpfr, config_vals[13]);
   mpfr_init2(ny_init_mpfr, config_vals[14]);
   mpfr_init2(nz_init_mpfr, config_vals[15]);
   mpfr_init2(lx_init_mpfr, config_vals[16]);
+  //approx
   mpfr_init2(ly_init_mpfr, config_vals[17]);
+  //approx
   mpfr_init2(lz_init_mpfr, config_vals[18]);
+  //approx
   mpfr_init2(lly_init_mpfr, config_vals[19]);
+  //approx
   mpfr_init2(t_init_mpfr, config_vals[20]);
   mpfr_init2(l_init_mpfr, config_vals[21]);
   mpfr_init2(w1_init_mpfr, config_vals[22]);
   mpfr_init2(h1_init_mpfr, config_vals[23]);
-  
+
     mpfr_init2 (temp_var_1, config_vals[0]);
     mpfr_init2 (temp_var_2, config_vals[0]);
             mpfr_init2 (temp_var_3, config_vals[0]);
@@ -115,12 +123,12 @@ int init_readconfig() {
   // For reading precision contents of config_file into array
    FILE *myFile;
      myFile = fopen("plane_config_file.txt", "r");
- 
+
         if (myFile == NULL) {
 					printf("Error Reading File\n");
                 exit (0);
                 }
- 
+
         int s;
         for (s = 0; s < LEN; s++) {
             fscanf(myFile, "%d,", &config_vals[s]);
@@ -128,7 +136,7 @@ int init_readconfig() {
 
         fclose(myFile);
         my_init_mpfr();
-        return 0;             
+        return 0;
 }
 
 
@@ -233,7 +241,7 @@ int texture1_bitflip(
   r = 255;
   b = 0;
   col = 0;
-  if (light != 0) {
+  if (bitflip_int(light) != 0) {
     r = (
         /* Approx */
         int)(255 * lcoff);
@@ -241,13 +249,20 @@ int texture1_bitflip(
 
   b = r;
   // inject error to r abd b
+#ifdef AGGRESSIVE
   b= bitflip_int(b);
   r= bitflip_int(r);
-  
-  if (texture == 1) {
+#endif
+  if (bitflip_int(texture) == 1) {
     col = (255 << 24) | (255 << 16);
-  } else if (texture == 2) {
+  } else if (bitflip_int(texture) == 2) {
+
+#ifdef AGRESSIVE
+    v = (my_round(x) + my_round(bitflip_float(z))) % 2;
+#else
     v = (my_round(x) + my_round(z)) % 2;
+#endif
+
     if (v == 0) {
       col = (255 << 24) | b;
     } else {
@@ -272,12 +287,12 @@ float lcoff;
 float sng; // could maybe make approximate
 int numIterations = 0;
 
-  
+
   texture = arg0; // getParameter("texture"));
   light = arg1;   // getParameter("light"));
   /* Approx */
   //~ int pixels[w * h];
-  
+
   int index, x, y; // not approx --> for loops and array indexing.
   /* Approx */
   float xe, ye, ze, xd, yd, zd;
@@ -357,13 +372,13 @@ void init_mpfr(int arg0, int arg1, int arg2, int arg3, int *pixels)
   int texture;
   int light;
   int numIterations = 0;
-  texture = arg0;
-  light = arg1;
+  texture = bitflip_int(arg0);
+  light = bitflip_int(arg1);
   int index;
   int x;
   int y;
-  mpfr_set_d(lly_init_mpfr, arg2, MPFR_RNDZ);
-  mpfr_set_d(ye_init_mpfr, arg3, MPFR_RNDZ);
+  mpfr_set_d(lly_init_mpfr, bitflip_int(arg2), MPFR_RNDZ);
+  mpfr_set_d(ye_init_mpfr, bitflip_int(arg3), MPFR_RNDZ);
   mpfr_set_d(nx_init_mpfr, 0, MPFR_RNDZ);
   mpfr_set_d(ny_init_mpfr, 1, MPFR_RNDZ);
   mpfr_set_d(nz_init_mpfr, 0, MPFR_RNDZ);
@@ -378,16 +393,16 @@ void init_mpfr(int arg0, int arg1, int arg2, int arg3, int *pixels)
     for (x = 0; x < w; x++){
     {
       mpfr_set_d(t_init_mpfr, -1, MPFR_RNDZ);
-      
+
 
 
             mpfr_d_sub(temp_var_3, x, w1_init_mpfr, MPFR_RNDZ);
             mpfr_div(xd_init_mpfr, (temp_var_3), w1_init_mpfr, MPFR_RNDZ);
-      
+
             mpfr_sub_d(temp_var_4, h1_init_mpfr, y, MPFR_RNDZ);
             mpfr_div(yd_init_mpfr, (temp_var_4), h1_init_mpfr, MPFR_RNDZ);
       mpfr_set_d(zd_init_mpfr, -1, MPFR_RNDZ);
-      
+
             mpfr_mul(temp_var_5, xd_init_mpfr, xd_init_mpfr, MPFR_RNDZ);
 
             mpfr_mul(temp_var_6, yd_init_mpfr, yd_init_mpfr, MPFR_RNDZ);
@@ -399,7 +414,7 @@ void init_mpfr(int arg0, int arg1, int arg2, int arg3, int *pixels)
             mpfr_div(xd_init_mpfr, xd_init_mpfr, l_init_mpfr, MPFR_RNDZ);
             mpfr_div(yd_init_mpfr, yd_init_mpfr, l_init_mpfr, MPFR_RNDZ);
             mpfr_div(zd_init_mpfr, zd_init_mpfr, l_init_mpfr, MPFR_RNDZ);
-      
+
             mpfr_sub(temp_var_9, k_init_mpfr, ye_init_mpfr, MPFR_RNDZ);
 
             mpfr_mul(temp_var_10, (temp_var_9), yd_init_mpfr, MPFR_RNDZ);
@@ -411,24 +426,24 @@ if ((mpfr_cmp_d((temp_var_10),0) <= 0)
       }
       else
       {
-        
+
                 mpfr_sub(temp_var_11, k_init_mpfr, ye_init_mpfr, MPFR_RNDZ);
                 mpfr_div(t_init_mpfr, (temp_var_11), yd_init_mpfr, MPFR_RNDZ);
       }
 
       index = (y * w) + x;
-      
+
 if ((mpfr_cmp_d(t_init_mpfr,0) >= 0)
 //original  t_init_mpfr >= 0
 )
       {
-        
+
                 mpfr_mul(temp_var_13, t_init_mpfr, xd_init_mpfr, MPFR_RNDZ);
                 mpfr_add(ix_init_mpfr, xe_init_mpfr, (temp_var_13), MPFR_RNDZ);
-        
+
                 mpfr_mul(temp_var_14, t_init_mpfr, yd_init_mpfr, MPFR_RNDZ);
                 mpfr_add(iy_init_mpfr, ye_init_mpfr, (temp_var_14), MPFR_RNDZ);
-        
+
                 mpfr_mul(temp_var_15, t_init_mpfr, zd_init_mpfr, MPFR_RNDZ);
                 mpfr_add(iz_init_mpfr, ze_init_mpfr, (temp_var_15), MPFR_RNDZ);
         mpfr_set_d(lx_init_mpfr, 0, MPFR_RNDZ);
@@ -438,11 +453,11 @@ if ((mpfr_cmp_d(t_init_mpfr,0) >= 0)
                         mpfr_sub(ly_init_mpfr, ly_init_mpfr, iy_init_mpfr, MPFR_RNDZ);
                         mpfr_sub(lz_init_mpfr, lz_init_mpfr, iz_init_mpfr, MPFR_RNDZ);
         mpfr_set_d(sng_init_mpfr, (float) sqrt(((mpfr_get_d(lx_init_mpfr, MPFR_RNDZ) * mpfr_get_d(lx_init_mpfr, MPFR_RNDZ)) + (mpfr_get_d(ly_init_mpfr, MPFR_RNDZ) * mpfr_get_d(ly_init_mpfr, MPFR_RNDZ))) + (mpfr_get_d(lz_init_mpfr, MPFR_RNDZ) * mpfr_get_d(lz_init_mpfr, MPFR_RNDZ))), MPFR_RNDZ);
-        
+
 
 
                 mpfr_d_div(sng_init_mpfr, 1.0f, sng_init_mpfr, MPFR_RNDZ);
-        
+
                 mpfr_mul(temp_var_19, lx_init_mpfr, nx_init_mpfr, MPFR_RNDZ);
 
                 mpfr_mul(temp_var_20, ly_init_mpfr, ny_init_mpfr, MPFR_RNDZ);
@@ -453,7 +468,7 @@ if ((mpfr_cmp_d(t_init_mpfr,0) >= 0)
 
                 mpfr_add(temp_var_23, (temp_var_21), (temp_var_22), MPFR_RNDZ);
                 mpfr_mul(lcoff_init_mpfr, (temp_var_23), sng_init_mpfr, MPFR_RNDZ);
-        pixels[index] = texture1(mpfr_get_d(ix_init_mpfr, MPFR_RNDZ), mpfr_get_d(iy_init_mpfr, MPFR_RNDZ), mpfr_get_d(iz_init_mpfr, MPFR_RNDZ), mpfr_get_d(lcoff_init_mpfr, MPFR_RNDZ), texture, light);
+        pixels[index] = texture1_bitflip(mpfr_get_d(ix_init_mpfr, MPFR_RNDZ), mpfr_get_d(iy_init_mpfr, MPFR_RNDZ), mpfr_get_d(iz_init_mpfr, MPFR_RNDZ), mpfr_get_d(lcoff_init_mpfr, MPFR_RNDZ), bitflip_int(texture), bitflip_int(light));
       }
       else
       {
@@ -484,13 +499,13 @@ void init_bitflip(int arg0, int arg1, int arg2, int arg3, int* pixels) {
 	float lcoff;
 	float sng; // could maybe make approximate
 	int numIterations = 0;
- 
-  
+
+
   texture = arg0; // getParameter("texture"));
   light = bitflip_int(arg1);   // getParameter("light"));
   /* Approx */
   //~ int pixels[w * h];
-  
+
   int index, x, y; // not approx --> for loops and array indexing.
   /* Approx */
   float xe, ye, ze, xd, yd, zd;
@@ -502,7 +517,11 @@ void init_bitflip(int arg0, int arg1, int arg2, int arg3, int* pixels) {
   float lx, ly, lz;
   float lly;
   lly = bitflip_int(arg2); // getParameter("lighty"));
-  ye = bitflip_int(arg3);  // getParameter("viewy"));
+#ifdef AGRESSIVE
+    ye = bitflip_int(arg3);  // getParameter("viewy"));
+#else
+    ye = (arg3);
+#endif
 
   nx = 0;
   ny = 1;
@@ -537,21 +556,35 @@ void init_bitflip(int arg0, int arg1, int arg2, int arg3, int* pixels) {
       } else {
         t = (k - ye) / yd;
       }
-
+#ifdef AGGRESSIVE
 		t = bitflip_float(t);
-
+#endif
       index = y * w + x;
       if (t >= 0) {
         ix = xe + t * xd;
+#ifdef AGGRESSIVE
         iy = bitflip_float(ye + t * yd);
         iz = bitflip_float(ze + t * zd);
+#else
+        iy = (ye + t * yd);
+        iz = (ze + t * zd);
+#endif
         lx = 0;
         ly = lly;
         lz = 0;
         lx = lx - ix;
+#ifdef AGGRESSIVE
         ly = bitflip_float(ly - iy);
+#else
+        ly = (ly - iy);
+#endif
         lz = lz - iz;
+
+#ifdef AGGRESSIVE
         sng = (float)sqrt(bitflip_float(lx * lx + ly * ly + lz * lz)); // sng=1.7f/sng;
+#else
+        sng = (float)sqrt(lx * lx + ly * ly + lz * lz); // sng=1.7f/sng;
+#endif
         sng = 1.0f / sng;
         lcoff = (lx * nx + ly * ny + lz * nz) * sng;
         pixels[index] = texture1_bitflip(ix, iy, iz, lcoff, texture,light);
@@ -566,13 +599,14 @@ void init_bitflip(int arg0, int arg1, int arg2, int arg3, int* pixels) {
 
 int main(int argc, char **argv) {
   int arg0 =2  , arg1 = 1, arg2 = 30, arg3= 10;
+//  int arg0 =1  , arg1 = 16843009, arg2 = 30, arg3= 10;
 
 	init_readconfig(); //for mpfr
 
 	int * pixels_ref = malloc(w*h*sizeof(int));
 	int * pixels_bitflip = malloc(w*h*sizeof(int));
 	int * pixels_mpfr = malloc(w*h*sizeof(int));
-	
+
   init(arg0, arg1, arg2, arg3, pixels_ref);
   init_bitflip(arg0, arg1, arg2, arg3, pixels_bitflip);
   init_mpfr(arg0, arg1, arg2, arg3, pixels_mpfr);
@@ -586,16 +620,16 @@ int main(int argc, char **argv) {
     int approx_mpfr = pixels_mpfr[i] & 0xff;
     diff_bitflip+=abs(approx_bitflip - ref);
     diff_mpfr+=abs(approx_mpfr - ref);
-    
-  }
 
+  }
+/*
   for ( i = 0; i < w * h; i++) {
     int ref = (pixels_ref[i]>>8) & 0xff;
      int approx_bitflip = (pixels_bitflip[i] >>8)& 0xff;
     int approx_mpfr = (pixels_mpfr[i] >>8)& 0xff;
     diff_bitflip+=abs(approx_bitflip - ref);
     diff_mpfr+=abs(approx_mpfr - ref);
-    
+
   }
 
  for ( i = 0; i < w * h; i++) {
@@ -604,10 +638,10 @@ int main(int argc, char **argv) {
     int approx_mpfr = (pixels_mpfr[i] >>16)& 0xff;
     diff_bitflip+=abs(approx_bitflip - ref);
     diff_mpfr+=abs(approx_mpfr - ref);
-    
-  } 
-  
-  
-  printf("mean diff  mpfr %lf \n", diff_mpfr/(3*w*h));
-  printf("mean diff  bitflip %lf \n", diff_bitflip/(3*w*h));
+
+  }
+*/
+
+  printf("%lf, ", diff_mpfr/(w*h));
+///  printf("mean diff  bitflip %lf \n", diff_bitflip/(3*w*h));
 }

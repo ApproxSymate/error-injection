@@ -14,7 +14,7 @@
 #include <mpfr.h>
 
 
-#define PI  3.1415926535897932
+double PI;//  3.1415926535897932
 
 /*-----------------------------------------------------------------------*/
 
@@ -145,12 +145,22 @@ static void FFT_transform_internal_bitflip (int N, double *data, int direction) 
         int j = 2*(b + dual);
 
         double wd_real = data[j] ;
-        double wd_imag = data[j+1] ;
 
+#ifdef AGGRESSIVE
+        double wd_imag = data[j+1] ;
+#else
+        double wd_imag = bitflip_float(data[j+1]) ;
+#endif
         data[j]   = bitflip_float(data[i]   - wd_real);
         data[j+1] = bitflip_float(data[i+1] - wd_imag);
+
+#ifdef AGGRESSIVE
         data[i]  += bitflip_float(wd_real);
-        data[i+1]+= bitflip_float(wd_imag);
+#else
+          data[i]  += wd_real;
+#endif
+        data[i+1]+= (wd_imag);
+
       }
 
       /* a = 1 .. (dual-1) */
@@ -166,16 +176,28 @@ static void FFT_transform_internal_bitflip (int N, double *data, int direction) 
           int i = 2*(b + a);
           int j = 2*(b + a + dual);
 
+#ifdef AGGRESSIVE
+          double z1_real = bitflip_float(data[j]);
+#else
           double z1_real = data[j];
+#endif
           double z1_imag = data[j+1];
 
           double wd_real = w_real * z1_real - w_imag * z1_imag;
+#ifdef AGGRESSIVE
           double wd_imag = w_real * z1_imag + w_imag * z1_real;
-
+#else
+          double wd_imag = bitflip_float(w_real * z1_imag + w_imag * z1_real);
+#endif
           data[j]   = bitflip_float(data[i]   - wd_real);
           data[j+1] = bitflip_float(data[i+1] - wd_imag);
+
+#ifdef AGGRESSIVE
           data[i]  += bitflip_float(wd_real);
-          data[i+1]+= bitflip_float(wd_imag);
+#else
+          data[i]  += (wd_real);
+#endif
+          data[i+1]+= (wd_imag);
         }
       }
     }
@@ -190,6 +212,18 @@ static void FFT_transform_internal_bitflip (int N, double *data, int direction) 
       if (n == 1) return;         /* Identity operation! */
       logn = int_log2(n);
 
+      mpfr_t w_real_mpfr;
+      mpfr_t w_imag_mpfr;
+      mpfr_t theta_mpfr;
+      mpfr_t s_mpfr;
+      mpfr_t s2_mpfr;
+      mpfr_t t_mpfr;
+      mpfr_init2(w_real_mpfr, FP_APPROX_FRACTION_BIT);
+      mpfr_init2(w_imag_mpfr, FP_APPROX_FRACTION_BIT);
+      mpfr_init2(theta_mpfr, FP_APPROX_FRACTION_BIT);
+      mpfr_init2(s_mpfr, FP_APPROX_FRACTION_BIT);
+      mpfr_init2(s2_mpfr, FP_APPROX_FRACTION_BIT);
+      mpfr_init2(t_mpfr, FP_APPROX_FRACTION_BIT);
 
       if (N == 0) return;
 
@@ -205,9 +239,21 @@ static void FFT_transform_internal_bitflip (int N, double *data, int direction) 
         int b;
 
         double theta = 2.0 * direction * PI / (2.0 * (double) dual);
+
+        mpfr_set_d(theta_mpfr, theta, MPFR_RNDZ);
+        theta = mpfr_get_d(theta_mpfr,MPFR_RNDZ);
+
         double s = sin(theta);
+        mpfr_set_d(s_mpfr, s, MPFR_RNDZ);
+        s = mpfr_get_d(s_mpfr,MPFR_RNDZ);
+
         double t = sin(theta / 2.0);
+        mpfr_set_d(t_mpfr, t, MPFR_RNDZ);
+        t = mpfr_get_d(t_mpfr,MPFR_RNDZ);
+
         double s2 = 2.0 * t * t;
+        mpfr_set_d(s2_mpfr, s2, MPFR_RNDZ);
+        s2 = mpfr_get_d(s2_mpfr,MPFR_RNDZ);
 
         for (a=0, b = 0; b < n; b += 2 * dual) {
           int i = 2*b ;
@@ -229,7 +275,13 @@ static void FFT_transform_internal_bitflip (int N, double *data, int direction) 
             double tmp_real = w_real - s * w_imag - s2 * w_real;
             double tmp_imag = w_imag + s * w_real - s2 * w_imag;
             w_real = tmp_real;
+            mpfr_set_d(w_real_mpfr, w_real, MPFR_RNDZ);
+            w_real = mpfr_get_d(w_real_mpfr, MPFR_RNDZ);
+
             w_imag = tmp_imag;
+            mpfr_set_d(w_imag_mpfr, w_imag, MPFR_RNDZ);
+            w_imag = mpfr_get_d(w_imag_mpfr, MPFR_RNDZ);
+
           }
           for (b = 0; b < n; b += 2 * dual) {
             int i = 2*(b + a);
@@ -367,12 +419,20 @@ void FFT_bitreverse(int N, double *data) {
         int k = n >> 1;
 
         if (i < j) {
+#ifdef AGGRESSIVE
           double tmp_real    = bitflip_float(data[ii]);
+#else
+          double tmp_real    = (data[ii]);
+#endif
           double tmp_imag    = bitflip_float(data[ii+1]);
+#ifdef AGGRESSIVE
           data[ii]   = bitflip_float(data[jj]);
-          data[ii+1] = bitflip_float(data[jj+1]);
-          data[jj]   = bitflip_float(tmp_real);
-          data[jj+1] = bitflip_float(tmp_imag); }
+#else
+          data[ii]   = (data[jj]);
+#endif
+          data[ii+1] = (data[jj+1]);
+          data[jj]   = (tmp_real);
+          data[jj+1] = (tmp_imag); }
 
         while (k <= j)
         {
@@ -462,6 +522,13 @@ int main()
     /* initialize FFT data as complex (N real/img pairs) */
 double mintime = RESOLUTION_DEFAULT;
 
+
+mpfr_t pi_mpfr;
+
+mpfr_init2(pi_mpfr, FP_APPROX_FRACTION_BIT);
+mpfr_set_d(pi_mpfr,   3.1415926535897932, MPFR_RNDZ);
+  PI = mpfr_get_d(pi_mpfr, MPFR_RNDZ);
+
  int N = FFT_SIZE;
 
 Random R = new_Random_seed(RANDOM_SEED);
@@ -475,10 +542,19 @@ Random R = new_Random_seed(RANDOM_SEED);
 
     double *x_bitflip = RandomVector(twoN, R_bitflip);
     double *x_mpfr = RandomVector(twoN, R_mpfr);
+    int i=0;
+    mpfr_t data_mpfr;
+    mpfr_init2(data_mpfr, FP_APPROX_FRACTION_BIT);
+    for(i=0;i<twoN;i++){
+
+  		mpfr_set_d(data_mpfr,x_mpfr[i],MPFR_RNDZ);
+      x_mpfr[i] = mpfr_get_d(data_mpfr,MPFR_RNDZ);
+
+  	}
 
     long cycles = 1;
     Stopwatch Q = new_Stopwatch();
-    int i=0;
+
     while(1)
     {
         Stopwatch_start(Q);
@@ -502,7 +578,7 @@ Random R = new_Random_seed(RANDOM_SEED);
 
     double err =0 ,sum_bitflip = 0, sum_mpfr =0;
     /* approx Mflops */
-    for(i-0;i<twoN;i++){
+    for(i=0;i<twoN;i++){
   		err = x[i] - x_bitflip[i];
   		sum_bitflip += (err*err);
       //reuse err

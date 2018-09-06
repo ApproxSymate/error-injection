@@ -67,10 +67,18 @@
                     double temp_x = bitflip_float(x[ col[i] ]);
                     double temp_val = bitflip_float(val[i]);
                   //  printf(" %lf %lf  \n", temp_x , bitflip_float(temp_x));
-                    sum+= temp_x * temp_val;
+#ifdef AGGRESSIVE
+                    sum+= bitflip_float(temp_x * temp_val);
+#else
+                    sum+= (temp_x * temp_val);
+#endif
                     //sum += x[ col[i] ] * val[i];
                   }
-                y[r] = sum;
+#ifdef AGGRESSIVE
+                y[r] =bitflip_float(sum);
+#else
+                y[r] =(sum);
+#endif
             }
         }
 
@@ -90,7 +98,7 @@
         mpfr_t temp_variable;
         mpfr_init2(x_temp, FP_APPROX_FRACTION_BIT);
         mpfr_init2(val_temp, FP_APPROX_FRACTION_BIT);
-        mpfr_init2(temp_variable, FP_FULL_FRACTION_BIT);
+        mpfr_init2(temp_variable, FP_APPROX_FRACTION_BIT);
         for (reps=0; reps<NUM_ITERATIONS; reps++)
         {
 

@@ -16,7 +16,7 @@
 
 
 
-#define LEN 7 
+#define LEN 7
  int config_vals[LEN];
   mpfr_t omega_over_four_SOR_execute;
   mpfr_t omega_SOR_execute;
@@ -31,7 +31,7 @@ mpfr_t Gip1_SOR_execute_mpfr;
             mpfr_t temp_var_5;
             mpfr_t temp_var_6;
             mpfr_t temp_var_7;
-int init_mpfr() { 
+int init_mpfr() {
   mpfr_init2(omega_over_four_SOR_execute, config_vals[2]);
 mpfr_init2(omega_SOR_execute, config_vals[1]);
   mpfr_init2(one_minus_omega_SOR_execute, config_vals[3]);
@@ -52,12 +52,12 @@ int init_readconfig() {
   // For reading precision contents of config_file into array
    FILE *myFile;
      myFile = fopen("SOR_config_file.txt", "r");
- 
+
         if (myFile == NULL) {
 					printf("Error Reading File\n");
                 exit (0);
                 }
- 
+
         int s;
         for (s = 0; s < LEN; s++) {
             fscanf(myFile, "%d,", &config_vals[s]);
@@ -65,7 +65,7 @@ int init_readconfig() {
 
         fclose(myFile);
         init_mpfr();
-        return 0;             
+        return 0;
 }
 
 
@@ -80,7 +80,7 @@ int init_readconfig() {
         return (Md-1)*(Nd-1)*num_iterD*6.0;
     }
 
-    void SOR_execute(int M, int N, double omega, double **G, int 
+    void SOR_execute(int M, int N, double omega, double **G, int
             num_iterations)
     {
 
@@ -90,7 +90,7 @@ int init_readconfig() {
         /* update interior points */
 
         int Mm1 = M-1;
-        int Nm1 = N-1; 
+        int Nm1 = N-1;
         int p;
         int i;
         int j;
@@ -106,13 +106,13 @@ int init_readconfig() {
                 Gim1 = G[i-1];
                 Gip1 = G[i+1];
                 for (j=1; j<Nm1; j++)
-                    Gi[j] = omega_over_four * (Gim1[j] + Gip1[j] + Gi[j-1] 
+                    Gi[j] = omega_over_four * (Gim1[j] + Gip1[j] + Gi[j-1]
                                 + Gi[j+1]) + one_minus_omega * Gi[j];
             }
         }
     }
-      
-   void SOR_execute_mpfr(int M, int N, double omega, double **G, int 
+
+   void SOR_execute_mpfr(int M, int N, double omega, double **G, int
             num_iterations)
     {
 mpfr_set_d(omega_SOR_execute,omega,MPFR_RNDZ);
@@ -130,13 +130,13 @@ mpfr_set_d(omega_SOR_execute,omega,MPFR_RNDZ);
   {
     for (i = 1; i < Mm1; i++){
     {
-		
+
 		                Gi = G[i];
                 Gim1 = G[i-1];
                 Gip1 = G[i+1];
-                
+
       for (j = 1; j < Nm1; j++){
-        
+
 
  mpfr_set_d(Gip1_SOR_execute_mpfr,Gip1[j],MPFR_RNDZ);
  mpfr_set_d(Gim1_SOR_execute_mpfr,Gim1[j],MPFR_RNDZ);
@@ -167,20 +167,25 @@ mpfr_set_d(omega_SOR_execute,omega,MPFR_RNDZ);
     }
 
 }
-    
-    
-    void SOR_execute_bitflip(int M, int N, double omega, double **G, int 
+
+
+    void SOR_execute_bitflip(int M, int N, double omega, double **G, int
             num_iterations)
     {
 
 		double omega_temp = bitflip_float(omega);
+#ifdef AGGRESSIVE
         double omega_over_four = bitflip_float(omega_temp * 0.25);
         double one_minus_omega = bitflip_float(1.0 - omega_temp);
+#else
+        double omega_over_four = (omega_temp * 0.25);
+        double one_minus_omega = (1.0 - omega_temp);
+#endif
 
         /* update interior points */
 
         int Mm1 = M-1;
-        int Nm1 = N-1; 
+        int Nm1 = N-1;
         int p;
         int i;
         int j;
@@ -196,31 +201,36 @@ mpfr_set_d(omega_SOR_execute,omega,MPFR_RNDZ);
                 Gim1 = G[i-1];
                 Gip1 = G[i+1];
                 for (j=1; j<Nm1; j++)
-                    Gi[j] =bitflip_float(omega_over_four * (Gim1[j] + Gip1[j] + Gi[j-1] 
+#ifdef AGGRESSIVE
+                    Gi[j] =bitflip_float(omega_over_four * (Gim1[j] + Gip1[j] + Gi[j-1]
                                 + Gi[j+1]) + one_minus_omega * Gi[j]);
+#else
+                  Gi[j] =(omega_over_four * (Gim1[j] + Gip1[j] + Gi[j-1]
+                      +  Gi[j+1]) + one_minus_omega * Gi[j]);
+#endif
             }
         }
-    }           
+    }
 
 
   int main ()
     {
 	int N = SOR_SIZE,i,j;
-	
+
  init_readconfig();
- 
+
         Random R = new_Random_seed(RANDOM_SEED);
         Random R_mpfr= new_Random_seed(RANDOM_SEED);
         Random R_bitflip = new_Random_seed(RANDOM_SEED);
-        
+
 	double min_time = RESOLUTION_DEFAULT;
 
         double **G = RandomMatrix(N, N, R);
         double **G_mpfr= RandomMatrix(N, N, R_mpfr);
         double **G_bitflip= RandomMatrix(N, N, R_bitflip);
-        
+
         double result = 0.0;
-        
+
         Stopwatch Q = new_Stopwatch();
         int cycles=1;
        while(1)
@@ -228,18 +238,18 @@ mpfr_set_d(omega_SOR_execute,omega,MPFR_RNDZ);
             Stopwatch_start(Q);
             SOR_execute(N, N, 1.25, G, cycles);
             SOR_execute_mpfr(N, N, 1.25, G_mpfr, cycles);
-            SOR_execute_bitflip(N, N, 1.25, G_bitflip, cycles);
+//            SOR_execute_bitflip(N, N, 1.25, G_bitflip, cycles);
             Stopwatch_stop(Q);
 
             if (Stopwatch_read(Q) >= min_time) break;
 
             cycles*=2;
         }
- 
+
              //~ SOR_execute(N, N, 1.25, G, cycles);
             //~ SOR_execute_mpfr(N, N, 1.25, G_mpfr, cycles);
             //~ SOR_execute_bitflip(N, N, 1.25, G_bitflip, cycles);
- 
+
          double sum = 0;
 		double err =0;
         for(i=0;i<N;i++)
@@ -247,21 +257,10 @@ mpfr_set_d(omega_SOR_execute,omega,MPFR_RNDZ);
                         err = (G[i][j]-G_mpfr[i][j])*(G[i][j]-G_mpfr[i][j]);
                         if(err==err && err >= 0){
 							sum = sum + err;
-                        
-                        }
-                } 
 
-        printf(" mpfr %lf\n",sqrt(sum/(N*N)));
-			sum = 0;
-	        for(i=0;i<N;i++)
-                for(j=0;j<N;j++){
-                        err = (G[i][j]-G_bitflip[i][j])*(G[i][j]-G_bitflip[i][j]);
-                        if(err==err && err >= 0){
-							sum = sum + err;
-							
                         }
                 }
-            printf(" bitflip %lf\n",sqrt(sum/(N*N)));     
-                 	
+
+        printf("%lf",sqrt(sum/(N*N)));
 
     }
