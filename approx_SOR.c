@@ -115,7 +115,7 @@ int init_readconfig() {
    void SOR_execute_mpfr(int M, int N, double omega, double **G, int
             num_iterations)
     {
-mpfr_set_d(omega_SOR_execute,omega,MPFR_RNDZ);
+      mpfr_set_d(omega_SOR_execute,omega,MPFR_RNDZ);
     mpfr_mul_d(omega_over_four_SOR_execute, omega_SOR_execute, 0.25, MPFR_RNDZ);
       mpfr_d_sub(one_minus_omega_SOR_execute, 1.0, omega_SOR_execute, MPFR_RNDZ);
   int Mm1 = M - 1;

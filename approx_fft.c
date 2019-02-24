@@ -222,7 +222,7 @@ static void FFT_transform_internal_bitflip (int N, double *data, int direction) 
       mpfr_init2(w_imag_mpfr, FP_APPROX_FRACTION_BIT);
       mpfr_init2(theta_mpfr, FP_APPROX_FRACTION_BIT);
       mpfr_init2(s_mpfr, FP_APPROX_FRACTION_BIT);
-      mpfr_init2(s2_mpfr, FP_APPROX_FRACTION_BIT);
+      mpfr_init2(s2_mpfr, FP_FULL_FRACTION_BIT); //False negative
       mpfr_init2(t_mpfr, FP_APPROX_FRACTION_BIT);
 
       if (N == 0) return;
@@ -479,6 +479,7 @@ void FFT_inverse_mpfr(int N, double *data)
 {
     int n = N/2;
     double norm = 0.0;
+
     int i=0;
     FFT_transform_internal_mpfr(N, data, +1);
 
@@ -486,6 +487,11 @@ void FFT_inverse_mpfr(int N, double *data)
 
 
     norm=1/((double) n);
+    mpfr_t norm_mpfr;
+    mpfr_init2(norm_mpfr, FP_FULL_FRACTION_BIT);
+    mpfr_set_d(norm_mpfr,  1/((double) n), MPFR_RNDZ);
+    norm = mpfr_get_d(norm_mpfr,MPFR_RNDZ);
+
     for(i=0; i<N; i++)
       data[i] *= norm;
 

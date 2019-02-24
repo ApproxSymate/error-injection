@@ -270,7 +270,7 @@ int texture1_bitflip(
     }
   }
 
-  return col;
+  return bitflip_int(col);
 }
 
 void init(int arg0, int arg1, int arg2, int arg3, int* pixels) {

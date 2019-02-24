@@ -401,7 +401,7 @@ void init_mpfr(int arg0, int arg1, int arg2, int arg3, int *pixels)
 
             mpfr_sub_d(temp_var_4, h1_init_mpfr, y, MPFR_RNDN);
             mpfr_div(yd_init_mpfr, (temp_var_4), h1_init_mpfr, MPFR_RNDN);
-      mpfr_set_d(zd_init_mpfr, -1, MPFR_RNDN);
+            mpfr_set_d(zd_init_mpfr, -1, MPFR_RNDN);
 
             mpfr_mul(temp_var_5, xd_init_mpfr, xd_init_mpfr, MPFR_RNDN);
 

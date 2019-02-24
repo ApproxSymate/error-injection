@@ -8,7 +8,7 @@
 #define LIMIT 8
 //#define AGGRESSIVE
 
-#define FP_APPROX_FRACTION_BIT 8
+#define FP_APPROX_FRACTION_BIT 4
 #define FP_FULL_FRACTION_BIT 53
 
 float bitflip_float (float );
