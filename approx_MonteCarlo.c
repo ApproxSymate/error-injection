@@ -48,7 +48,9 @@ static const int SEED = 113;
         }
 
         Random_delete(R);
+        double result = ((double) under_curve / Num_samples) * 4.0;
 
+        printf("under_curve %d, result %f \n", under_curve, result);
         return ((double) under_curve / Num_samples) * 4.0;
     }
 
@@ -75,12 +77,12 @@ static const int SEED = 113;
         {
             double x= Random_nextDouble(R);
             double y= Random_nextDouble(R);
-            mpfr_set_d(x_temp,  x, MPFR_RNDZ);
-            mpfr_set_d(y_temp, y, MPFR_RNDZ);
-			mpfr_mul(temp_variable1, x_temp, x_temp, MPFR_RNDZ);
-			mpfr_mul(temp_variable2, y_temp, y_temp, MPFR_RNDZ);
-			mpfr_add(temp_variable1,temp_variable1,temp_variable2,MPFR_RNDZ);
-			if(mpfr_get_d(temp_variable1, MPFR_RNDZ) <= 1.0)
+            mpfr_set_d(x_temp,  x, MPFR_RNDN);
+            mpfr_set_d(y_temp, y, MPFR_RNDN);
+			mpfr_mul(temp_variable1, x_temp, x_temp, MPFR_RNDN);
+			mpfr_mul(temp_variable2, y_temp, y_temp, MPFR_RNDN);
+			mpfr_add(temp_variable1,temp_variable1,temp_variable2,MPFR_RNDN);
+			if(mpfr_get_d(temp_variable1, MPFR_RNDN) <= 1.0)
 					under_curve ++ ;
            // if ( x*x + y*y <= 1.0)
             //     under_curve ++;
@@ -89,7 +91,15 @@ static const int SEED = 113;
 
         Random_delete(R);
 
-        return ((double) under_curve / Num_samples) * 4.0;
+        mpfr_t temp_result;
+        mpfr_init2(temp_result, FP_APPROX_FRACTION_BIT);
+        double result = ((double) under_curve / Num_samples) * 4.0;
+        mpfr_set_d (temp_result, result, MPFR_RNDN);
+        printf("under_curve %d, result %f, result mpfr %f \n", under_curve, result, mpfr_get_d(temp_result,MPFR_RNDN ));
+        //under_curve 7011702, result 3.343440  ;
+        //under_curve 6587369, result 3.141102  ;
+        //under_curve 7011702, result 3.343440  ;
+        return mpfr_get_d(temp_result,MPFR_RNDN );
     }
 
 
@@ -131,6 +141,9 @@ double res_mpfr;
 double res_bitflip ;
 double res_ref;
     int cycles=1;
+    int loops = 0;
+    double mpfr_error = 0.0;
+    cycles = 1492;
     while(1)
     {
         Stopwatch_start(Q);
@@ -140,23 +153,28 @@ double res_ref;
          res_bitflip = MonteCarlo_bitflip(cycles);
 
          res_ref= MonteCarlo(cycles);
+         //printf("cycles %d", cycles);
 
         Stopwatch_stop(Q);
-
+        /*
+        if (cycles > 256 )
+          break;
         if (Stopwatch_read(Q) >= min_time) break;
-
-
+*/
+        break;
         cycles *= 2;
+        //mpfr_error += fabs(res_mpfr - res_ref)/res_ref ;
+        loops ++;
     }
 
 
 
 
-      	printf("MPFR %lf\n",fabs(res_mpfr - res_ref)/res_ref);
+      	printf("MPFR %lf\n", fabs(res_mpfr - res_ref)/res_ref);
 
         printf("bitflip %lf\n",fabs(res_bitflip - res_ref)/res_ref);
 
-		printf("ref %lf \n", res_ref);
+		printf("ref %.10f \n", res_ref);
 
         return 0.0;
     }
